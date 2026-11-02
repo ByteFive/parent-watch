@@ -1,11 +1,13 @@
 import { Outlet } from "react-router-dom";
-import Header from "./Header";
+import Navbar from "./Navbar";
 
 export default function RootLayout() {
   return (
     <>
-      <Header />
-      <Outlet />
+      <div className="h-[calc(100vh-80px)] bg-green-200">
+        <Outlet />
+      </div>
+      <Navbar />
     </>
   );
 }

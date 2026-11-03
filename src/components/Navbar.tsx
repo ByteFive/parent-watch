@@ -23,7 +23,7 @@ export default function Navbar() {
   const pathname = useLocation().pathname;
 
   return (
-    <nav className="h-20">
+    <nav className="h-20 sticky bottom-0 bg-white border-t border-neutral/20">
       <ul className="flex items-center justify-around h-full">
         {links.map((link) => (
           <li key={link.path}>

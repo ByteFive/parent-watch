@@ -5,21 +5,21 @@ export default function Home() {
   const devices = [
     {
       id: 1,
-      name: "Dispositivo 1",
+      name: "Filho 1",
       photo:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGfgf5mB-y52rO5z5-D4P9LkYNUgj9E5BhLnxcbDVUtIyRScOwSOENQ88&s=10",
       location: "Rua A, 123",
     },
     {
       id: 2,
-      name: "Dispositivo 2",
+      name: "Filho 2",
       photo:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGfgf5mB-y52rO5z5-D4P9LkYNUgj9E5BhLnxcbDVUtIyRScOwSOENQ88&s=10",
       location: "Rua A, 123",
     },
     {
       id: 3,
-      name: "Dispositivo 3",
+      name: "Filho 3",
       photo:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGfgf5mB-y52rO5z5-D4P9LkYNUgj9E5BhLnxcbDVUtIyRScOwSOENQ88&s=10",
       location: "Rua A, 123",
@@ -27,7 +27,7 @@ export default function Home() {
   ];
 
   return (
-    <>
+    <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Olá, Alison!</h2>
       <div className="flex items-center justify-between mb-4">
         <h3 className="flex items-center gap-2 text-md font-semibold">
@@ -63,6 +63,6 @@ export default function Home() {
           </Link>
         ))}
       </div>
-    </>
+    </div>
   );
 }

@@ -2,8 +2,13 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from "./components/RootLayout";
 import Home from "./pages/Home";
 import LocationDetails from "./pages/LocationDetails";
+import Cadastro from "./pages/Cadastro";
 
 const router = createBrowserRouter([
+  {
+    path: "/criar-conta",
+    element: <Cadastro />,
+  },
   {
     path: "/",
     element: <RootLayout />,

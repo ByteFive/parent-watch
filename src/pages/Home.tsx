@@ -35,10 +35,13 @@ export default function Home() {
           Localizações
         </h3>
 
-        <button className="flex items-center gap-1 bg-secondary text-white px-3 py-1 rounded-md hover:bg-secondary/80 text-sm">
+        <Link
+          to="/vincular-filho"
+          className="flex items-center gap-1 bg-secondary text-white px-3 py-1 rounded-md hover:bg-secondary/80 text-sm"
+        >
           <Plus size={16} />
           Adicionar filho(a)
-        </button>
+        </Link>
       </div>
 
       <div className="flex flex-col gap-4">

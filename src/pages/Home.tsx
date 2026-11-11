@@ -27,7 +27,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-secondary/5">
       <h2 className="text-xl font-bold mb-4">Olá, Alison!</h2>
       <div className="flex items-center justify-between mb-4">
         <h3 className="flex items-center gap-2 text-md font-semibold">
@@ -37,7 +37,7 @@ export default function Home() {
 
         <Link
           to="/vincular-filho"
-          className="flex items-center gap-1 bg-secondary text-white px-3 py-1 rounded-md hover:bg-secondary/80 text-sm"
+          className="flex items-center gap-1 bg-secondary text-white px-3 py-2 rounded-md hover:bg-secondary/80 text-sm"
         >
           <Plus size={16} />
           Adicionar filho(a)
@@ -48,7 +48,7 @@ export default function Home() {
         {devices.map((device) => (
           <Link
             to={`/localizacao/${device.id}`}
-            className="shadow group p-4 rounded-md space-y-4"
+            className="shadow group p-4 rounded-md space-y-4 bg-white"
             key={device.id}
           >
             <div className="flex items-center justify-between">

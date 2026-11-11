@@ -1,3 +1,4 @@
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -5,8 +6,37 @@ import {
   RefreshCw,
   Send,
   Share2,
+  Navigation,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+
+// Coordenadas de exemplo
+const position: [number, number] = [-23.123456, -45.678901];
+
+// Corrige os ícones padrão do Leaflet
+const childIcon = L.divIcon({
+  className: "",
+  html: `
+    <div style="
+      width: 48px;
+      height: 48px;
+      background: #ffffff;
+      border: 4px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      overflow: hidden;
+    ">
+      <img
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGfgf5mB-y52rO5z5-D4P9LkYNUgj9E5BhLnxcbDVUtIyRScOwSOENQ88&s=10"
+        style="width:100%;height:100%;object-fit:cover;"
+      />
+    </div>
+  `,
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+});
 
 export default function LocationDetails() {
   return (
@@ -16,20 +46,45 @@ export default function LocationDetails() {
           <Link to="/">
             <ArrowLeft />
           </Link>
-          <h2 className="text-xl font-bold">Localização do filho 01</h2>
+          <h2 className="text-xl font-bold">
+            Localização do filho 01
+          </h2>
         </div>
+
         <button className="p-3 rounded-full bg-secondary/20">
           <Share2 className="text-secondary" />
         </button>
       </div>
 
-      <div className="bg-neutral/20 h-80 flex items-center justify-center">
-        <div className="bg-secondary/50 rounded-full w-24 h-24 flex items-center justify-center">
-          <div className="bg-secondary rounded-full w-6 h-6"></div>
-        </div>
+      {/* MAPA */}
+      <div className="relative h-80 w-full z-0">
+        <MapContainer
+          center={position}
+          zoom={16}
+          scrollWheelZoom={true}
+          className="h-full w-full"
+          zoomControl={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <Marker position={position} icon={childIcon}>
+            <Popup>Filho 01 está aqui</Popup>
+          </Marker>
+        </MapContainer>
+
+        <button
+          className="absolute bottom-4 right-4 z-[1000] bg-white p-3 rounded-full shadow-md"
+          title="Centralizar localização"
+        >
+          <Navigation className="text-secondary" />
+        </button>
       </div>
 
-      <div className="bg-white p-4 rounded-t-4xl transform -translate-y-6 space-y-4">
+      {/* INFORMAÇÕES */}
+      <div className="bg-white p-4 rounded-t-4xl transform -translate-y-6 relative z-10 space-y-4">
         <div className="flex items-center gap-2 font-medium text-xl">
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGfgf5mB-y52rO5z5-D4P9LkYNUgj9E5BhLnxcbDVUtIyRScOwSOENQ88&s=10"
@@ -68,6 +123,7 @@ export default function LocationDetails() {
               <span className="text-neutral text-sm">Latitude</span>
               <span className="font-medium">-23.123456</span>
             </div>
+
             <div className="bg-secondary/10 p-4 rounded-md flex flex-col gap-2">
               <span className="text-neutral text-sm">Longitude</span>
               <span className="font-medium">-45.678901</span>
@@ -84,7 +140,7 @@ export default function LocationDetails() {
             </button>
           </div>
 
-          <ul>
+          <ul className="space-y-3">
             <li className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-secondary"></div>
@@ -92,11 +148,10 @@ export default function LocationDetails() {
               </div>
               <span>13:10</span>
             </li>
+
             <li className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-neutral"></div>
-                <span className="text-neutral">Saiu de casa</span>
-              </div>
+              <div className="w-4 h-4 rounded-full bg-neutral"></div>
+              <span className="text-neutral">Saiu de casa</span>
               <span>12:35</span>
             </li>
           </ul>

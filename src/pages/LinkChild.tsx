@@ -108,7 +108,6 @@ export default function LinkChild() {
 
   return (
     <div className="min-h-screen bg-secondary/5">
-      {/* Cabeçalho */}
       <div className="flex items-center justify-between p-4 bg-white shadow-sm">
         <div className="flex items-center gap-2">
           <Link to="/">
@@ -124,7 +123,6 @@ export default function LinkChild() {
       </div>
 
       <div className="p-4 space-y-6">
-        {/* Título */}
         <div className="flex items-start justify-between">
           <div>
             <span className="text-secondary text-sm font-medium uppercase">

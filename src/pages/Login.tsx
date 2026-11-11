@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 
-function formatCpf(value: string): string {
+export function formatCpf(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
 
   return digits
@@ -92,7 +92,7 @@ export default function Login() {
           </Link>
 
           <Link
-            to="/home"
+            to="/"
             className="flex items-center justify-center gap-2 w-full h-14 rounded-xl bg-primary text-white font-semibold shadow-lg hover:bg-primary/90 duration-300"
           >
             Entrar
@@ -103,7 +103,7 @@ export default function Login() {
         <p className="text-center text-neutral mt-8">
           Ainda não tem conta?{" "}
           <Link
-            to="/criar-conta"
+            to="/cadastro"
             className="font-semibold text-secondary hover:text-secondary/80 duration-300"
           >
             Criar conta

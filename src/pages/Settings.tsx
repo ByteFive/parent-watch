@@ -10,7 +10,7 @@ import {
 
 export default function Settings() {
   return (
-    <div className="p-4 space-y-4 bg-neutral/10">
+    <div className="p-4 space-y-4 bg-secondary/5">
       <h1 className="font-bold text-3xl">Olá, Lucas!</h1>
       <div className="bg bg-secondary/10 flex gap-4 p-4 items-center rounded-2xl">
         <div className="bg-secondary p-4 rounded-2xl">
@@ -35,7 +35,7 @@ export default function Settings() {
             Protegido com criptografia familiar
           </p>
         </div>
-        <button className="bg-primary flex justify-center gap-2 p-4 rounded-2xl text-white">
+        <button className="bg-secondary flex justify-center gap-2 p-4 rounded-2xl text-white">
           {" "}
           <Copy /> Copiar Código ID{" "}
         </button>
@@ -70,7 +70,7 @@ export default function Settings() {
       </div>
 
       <div className="flex justify-center items-center p-4">
-        <button className="flex gap-4">
+        <button className="flex items-center gap-4">
           <LogOut className="text-red-500" />
           Sair da conta neste aparelho
         </button>

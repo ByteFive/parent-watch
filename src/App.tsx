@@ -10,11 +10,11 @@ import Cadastro from "./pages/Cadastro";
 const router = createBrowserRouter([
   
    {
-        path: "/",
+        path: "/login",
         element: <Login />,
   },
   {
-    path: "/criar-conta",
+    path: "/cadastro",
     element: <Cadastro />,
   },
   {
@@ -22,7 +22,7 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
-        path: "/home",
+        path: "/",
         element: <Home />,
       },
       {
@@ -32,7 +32,8 @@ const router = createBrowserRouter([
       {
         path: "/Ajustes",
         element: <Settings />
-      }
+      },
+      {
         path: "/vincular-filho",
         element : <LinkChild />,
       },

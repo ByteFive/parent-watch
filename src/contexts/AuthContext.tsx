@@ -1,119 +1,98 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import api, { getApiErrorMessage } from "../services/api";
+import { disconnectLocationSocket } from "../services/socket";
+import type { LoginFormData, RegisterFormData } from "../lib/validations/authSchema";
+import { toRegisterPayload } from "../lib/validations/authSchema";
 
-export type UserRole = "responsavel" | "dependente";
-
-export type AuthUser = {
+export type UserRole = "parent" | "child";
+export interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  cpf: string;
   role: UserRole;
-};
-
-type AuthContextValue = {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  login: (identifier: string, password: string) => AuthUser | null;
-  logout: () => void;
-};
-
-const DEFAULT_USERS: Array<AuthUser & { password: string }> = [
-  {
-    id: "user-responsavel",
-    name: "Alison Barbosa",
-    email: "email@example.com",
-    cpf: "00000000000",
-    role: "responsavel",
-    password: "123456",
-  },
-  {
-    id: "user-dependente",
-    name: "Lucas Oliveira",
-    email: "email@example.com",
-    cpf: "11111111111",
-    role: "dependente",
-    password: "123456",
-  },
-];
-
-const STORAGE_KEY = "parentwatch.auth.user";
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-function getStoredUser(): AuthUser | null {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return null;
-
-    const parsed: unknown = JSON.parse(stored);
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "id" in parsed &&
-      "name" in parsed &&
-      "cpf" in parsed &&
-      "role" in parsed &&
-      (parsed.role === "responsavel" || parsed.role === "dependente")
-    ) {
-      const user = DEFAULT_USERS.find((item) => item.id === parsed.id);
-      return user
-        ? { id: user.id, name: user.name, email: user.email, cpf: user.cpf, role: user.role }
-        : null;
-    }
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  return null;
+  familyCode?: string;
 }
+interface AuthContextData {
+  user: User | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  login: (data: LoginFormData) => Promise<User>;
+  register: (data: RegisterFormData) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<User | null>;
+}
+const AuthContext = createContext<AuthContextData | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  function login(identifier: string, password: string): AuthUser | null {
-    const normalizedIdentifier = identifier.replace(/\D/g, "");
-    const foundUser = DEFAULT_USERS.find(
-      (item) => item.cpf === normalizedIdentifier && item.password === password,
-    );
+  const checkAuth = useCallback(async () => {
+    try {
+      const { data } = await api.get<{ user: User }>("/auth/me");
+      setUser(data.user);
+      return data.user;
+    } catch {
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    if (!foundUser) return null;
+  const login = useCallback(async (formData: LoginFormData) => {
+    try {
+      const { data } = await api.post<{ user: User }>("/auth/login", {
+        cpf: formData.cpf.replace(/\D/g, ""),
+        password: formData.password,
+      });
+      setUser(data.user);
+      return data.user;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, "Não foi possível realizar o login."), { cause: error });
+    }
+  }, []);
 
-    const authenticatedUser: AuthUser = {
-      id: foundUser.id,
-      name: foundUser.name,
-      email: foundUser.email,
-      cpf: foundUser.cpf,
-      role: foundUser.role,
-    };
+  const register = useCallback(async (formData: RegisterFormData) => {
+    try {
+      await api.post("/auth/register", toRegisterPayload(formData));
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, "Não foi possível criar sua conta."), { cause: error });
+    }
+  }, []);
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(authenticatedUser));
-    setUser(authenticatedUser);
-    return authenticatedUser;
-  }
+  const logout = useCallback(async () => {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      setUser(null);
+      disconnectLocationSocket();
+    }
+  }, []);
 
-  function logout() {
-    localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
-  }
+  // A checagem inicial reidrata o usuário a partir do cookie HttpOnly.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void checkAuth(); }, [checkAuth]);
 
-  const value = useMemo(
-    () => ({ user, isAuthenticated: user !== null, login, logout }),
-    [user],
-  );
+  const value = useMemo(() => ({
+    user, loading, isAuthenticated: Boolean(user), login, register, logout, checkAuth,
+  }), [user, loading, login, register, logout, checkAuth]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth deve ser utilizado dentro de AuthProvider.");
-  }
+  if (!context) throw new Error("useAuth deve ser utilizado dentro de AuthProvider.");
   return context;
 }

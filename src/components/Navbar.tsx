@@ -26,7 +26,7 @@ export default function Navbar() {
 
   return (
 
-    <nav className={`h-20 bottom-0 bg-white border-t border-neutral/20 ${user?.role === "dependente" ? "hidden" : "sticky"}`}>
+    <nav className={`h-20 bottom-0 bg-white border-t border-neutral/20 ${user?.role === "child" ? "hidden" : "sticky"}`}>
       <ul className="flex items-center justify-around h-full">
         {links.map((link) => (
           <li key={link.path}>

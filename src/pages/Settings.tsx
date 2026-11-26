@@ -1,189 +1,59 @@
-import {
-  Bell,
-  ChevronRight,
-  CircleCheck,
-  Copy,
-  KeyRound,
-  LockKeyhole,
-  LogOut,
-  Shield,
-  ShieldCheck,
-  User,
-  UserPlus,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, KeyRound, LogOut, MapPin, ShieldCheck, UserRound, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getLocationSocket } from "../services/socket";
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [geoError, setGeoError] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  function handleLogout() {
-    logout();
+  // A tela da criança conecta o socket autenticado e inicia o watch de geolocalização.
+  useEffect(() => {
+    if (user?.role !== "child") return;
+    if (!("geolocation" in navigator)) return;
+    const socket = getLocationSocket();
+    let watchId: number | undefined;
+    const startWatch = () => {
+      watchId = navigator.geolocation.watchPosition((position) => {
+        socket.emit("location:update", { lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy });
+        setSharing(true); setGeoError("");
+      }, (error) => {
+        setSharing(false);
+        setGeoError(error.code === error.PERMISSION_DENIED ? "Permita o acesso à localização nas configurações do navegador/aparelho." : error.message);
+      }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+    };
+    if (!socket.connected) socket.connect();
+    socket.on("connect", startWatch);
+    if (socket.connected) startWatch();
+    return () => {
+      if (watchId !== undefined) navigator.geolocation.clearWatch(watchId);
+      socket.off("connect", startWatch);
+      if (socket.connected) socket.emit("location:stop");
+    };
+  }, [user?.role]);
+
+  async function handleLogout() {
+    await logout();
     navigate("/login", { replace: true });
   }
+  async function copyCode() {
+    if (!user?.familyCode) return;
+    try { await navigator.clipboard.writeText(user.familyCode); setCopied(true); window.setTimeout(() => setCopied(false), 1800); }
+    catch { setGeoError("Não foi possível copiar o código neste navegador."); }
+  }
+  const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim();
 
-  return (
-    <div className="min-h-screen bg-secondary/5 pb-20">
-      {user?.role === "responsavel" ? (
-        /* Versão do Responsável */
-        <div className="p-4 space-y-6 max-w-md mx-auto">
-          <h1 className="font-bold text-3xl text-gray-800">Ajustes</h1>
+  if (user?.role === "parent") return <div className="min-h-screen bg-secondary/5 p-4 pb-20"><main className="max-w-lg mx-auto space-y-5"><h1 className="font-bold text-3xl">Ajustes</h1><button onClick={() => navigate("/perfil")} className="w-full bg-white p-4 rounded-2xl flex items-center gap-3 text-left shadow-sm"><div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center font-bold text-primary">{user.firstName[0]}</div><div className="flex-1"><p className="font-bold">{fullName}</p><p className="text-xs text-neutral">{user.email}</p></div><UserRound className="text-neutral"/></button>
+    <section className="bg-white rounded-2xl p-4 space-y-2"><h2 className="text-xs font-bold uppercase text-neutral">Gerenciamento familiar</h2><button onClick={() => navigate("/perfil")} className="w-full p-3 flex items-center gap-3 text-left"><UserRound className="text-secondary"/> Meu perfil</button><button onClick={() => navigate("/vincular-filho")} className="w-full p-3 flex items-center gap-3 text-left"><UserPlus className="text-secondary"/> Vincular novo dependente</button></section>
+    <button onClick={() => void handleLogout()} className="w-full bg-white text-red-600 font-semibold p-4 rounded-2xl shadow-sm flex items-center justify-center gap-2"><LogOut size={19}/> Sair da conta neste aparelho</button></main></div>;
 
-          {/* Card de Perfil Resumido */}
-          <div
-            onClick={() => navigate("/perfil")}
-            className="bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg">
-                {user?.name ? user.name.charAt(0).toUpperCase() : "R"}
-              </div>
-              <div>
-                <p className="font-bold text-gray-800">{user?.name || "Responsável"}</p>
-                <p className="text-xs text-gray-500">{user?.email || "responsavel@email.com"}</p>
-              </div>
-            </div>
-            <ChevronRight className="text-gray-400" size={20} />
-          </div>
-
-          {/* Gerenciamento Familiar */}
-          <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1">
-              Gerenciamento Familiar
-            </h2>
-            <div className="bg-white rounded-2xl p-2 shadow-sm space-y-1">
-              <button
-                onClick={() => navigate("/perfil")}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-secondary/5 transition-colors text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-secondary/10 p-2 rounded-xl text-primary">
-                    <User size={18} />
-                  </div>
-                  <span className="font-medium text-gray-700 text-sm">Meu Perfil</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-400" />
-              </button>
-
-              <button
-                onClick={() => navigate("/vincular-filho")}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-secondary/5 transition-colors text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-secondary/10 p-2 rounded-xl text-primary">
-                    <UserPlus size={18} />
-                  </div>
-                  <span className="font-medium text-gray-700 text-sm">Vincular Novo Dependente</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-400" />
-              </button>
-            </div>
-          </div>
-
-          {/* Preferências e Segurança */}
-          <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1">
-              Preferências e Segurança
-            </h2>
-            <div className="bg-white rounded-2xl p-2 shadow-sm space-y-1">
-              <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-secondary/5 transition-colors text-left">
-                <div className="flex items-center gap-3">
-                  <div className="bg-secondary/10 p-2 rounded-xl text-primary">
-                    <Bell size={18} />
-                  </div>
-                  <span className="font-medium text-gray-700 text-sm">Notificações e Alertas</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-400" />
-              </button>
-
-              <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-secondary/5 transition-colors text-left">
-                <div className="flex items-center gap-3">
-                  <div className="bg-secondary/10 p-2 rounded-xl text-primary">
-                    <Shield size={18} />
-                  </div>
-                  <span className="font-medium text-gray-700 text-sm">Privacidade e Permissões</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-400" />
-              </button>
-            </div>
-          </div>
-
-          {/* Botão Sair */}
-          <div className="pt-4 flex justify-center">
-            <button
-              onClick={handleLogout}
-              className="w-full bg-white text-red-500 font-semibold p-4 rounded-2xl shadow-sm flex items-center justify-center gap-2 hover:bg-red-50 transition-colors border border-red-100"
-            >
-              <LogOut size={20} />
-              <span>Sair da conta neste aparelho</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* Versão do Dependente */
-        <div className="p-4 space-y-4 max-w-md mx-auto">
-          <h1 className="font-bold text-3xl">Olá, {user?.name || "Lucas"}!</h1>
-          <div className="bg bg-secondary/10 flex gap-4 p-4 items-center rounded-2xl">
-            <div className="bg-secondary p-4 rounded-2xl">
-              <ShieldCheck className="text-white" />
-            </div>
-            <p className="font-semibold">Compartilhamento Ativo</p>
-          </div>
-
-          <div className="flex flex-col bg-white rounded-2xl p-4 space-y-4">
-            <div className="flex gap-4 items-center">
-              <div className="bg-secondary/30 p-2 rounded-2xl">
-                <KeyRound size={16} />
-              </div>
-              <p>Seu ID de Verificação</p>
-            </div>
-            <div className="bg-secondary/10 flex flex-col items-center rounded-2xl gap-4 p-2">
-              <p className="text-gray-500">código do dispositivo</p>
-              <p className="text-3xl text-primary font-bold">LUCAS-8462</p>
-              <p className="flex items-center text-gray-700 gap-2 text-xs">
-                <LockKeyhole className="text-secondary" size={16} />
-                Protegido com criptografia familiar
-              </p>
-            </div>
-            <button className="bg-secondary flex justify-center items-center gap-2 p-4 rounded-2xl text-white font-semibold">
-              <Copy size={18} /> Copiar Código ID
-            </button>
-          </div>
-
-          <h2 className="font-semibold text-lg">Responsável Vinculado</h2>
-          <div className="flex items-center p-4 gap-4 bg-white rounded-2xl">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-secondary/20 flex items-center justify-center">
-              <User className="text-primary" size={32} />
-            </div>
-
-            <div className="flex justify-between items-center w-full">
-              <p className="font-bold text-gray-800">Maria Oliveira (Mãe)</p>
-              <CircleCheck className="text-secondary" />
-            </div>
-          </div>
-
-          <div className="bg-secondary/10 flex items-center rounded-2xl p-4 gap-4">
-            <div className="bg-secondary/20 p-2 rounded-3xl shrink-0">
-              <Shield className="text-primary" />
-            </div>
-            <div>
-              <p className="text-sm">
-                <span className="font-semibold">Privacidade e Foco: </span>Este
-                aplicativo é exclusivamente para manter você protegido. Seu perfil
-                não acessa o painel de outros usuários.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-center items-center p-4">
-            <button className="flex items-center gap-2 text-red-500 font-semibold" onClick={handleLogout}>
-              <LogOut size={20} />
-              Sair da conta neste aparelho
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="min-h-screen bg-secondary/5 p-4 pb-20"><main className="max-w-lg mx-auto space-y-5"><h1 className="font-bold text-3xl">Olá, {user?.firstName || ""}!</h1>
+    <section className="bg-white rounded-2xl p-5 shadow-sm space-y-3"><div className="flex items-center gap-3"><div className="bg-secondary p-3 rounded-xl text-white"><ShieldCheck/></div><div><p className="font-semibold">Compartilhamento de localização</p><p className={`text-sm ${sharing ? "text-green-700" : "text-neutral"}`}>{sharing ? "Ativo neste aparelho" : "Aguardando permissão/conexão"}</p></div></div>{!("geolocation" in navigator) && <p role="alert" className="text-sm text-red-600">Este navegador não oferece geolocalização.</p>}{geoError && <p role="alert" className="text-sm text-red-600">{geoError}</p>}<p className="text-xs text-neutral">A localização é enviada enquanto esta tela estiver aberta e o navegador permitir o acesso. Para compartilhamento contínuo em segundo plano, é necessário um aplicativo móvel nativo.</p></section>
+    <section className="bg-white rounded-2xl p-5 shadow-sm space-y-3"><div className="flex items-center gap-3"><KeyRound className="text-secondary"/><p className="font-semibold">Seu código de família</p></div><p className="text-xs text-neutral">Compartilhe este código com seu responsável para vincular as contas.</p><p className="text-center text-2xl tracking-widest font-bold text-primary bg-secondary/10 rounded-xl p-4">{user?.familyCode || "Código indisponível"}</p><button onClick={() => void copyCode()} disabled={!user?.familyCode} className="w-full bg-secondary text-white rounded-xl p-3 flex items-center justify-center gap-2 disabled:opacity-50"><Copy size={17}/>{copied ? "Código copiado" : "Copiar código"}</button></section>
+    <section className="bg-secondary/10 rounded-2xl p-4 flex gap-3"><MapPin className="text-primary shrink-0"/><p className="text-sm">O ParentWatch compartilha sua posição com o responsável vinculado, conforme as permissões aplicadas pelo servidor.</p></section>
+    <button onClick={() => void handleLogout()} className="w-full text-red-600 font-semibold p-4 flex items-center justify-center gap-2"><LogOut size={19}/> Sair da conta neste aparelho</button></main></div>;
 }
